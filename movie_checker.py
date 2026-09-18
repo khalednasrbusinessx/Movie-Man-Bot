@@ -46,7 +46,17 @@ page = browser.new_page(
     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
 )
 
-page.goto(
+try:
+    page.goto(
+        url,
+        wait_until="domcontentloaded",
+        timeout=60000
+    )
+
+except Exception as e:
+    print("Could not open", cinema, e)
+    browser.close()
+    return
     url,
     wait_until="domcontentloaded",
     timeout=60000
