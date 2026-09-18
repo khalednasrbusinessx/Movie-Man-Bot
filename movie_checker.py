@@ -75,6 +75,8 @@ def check_site(cinema, url):
 
         content = page.content().lower()
 
+        print(content[:2000])
+
 
         found = []
 
