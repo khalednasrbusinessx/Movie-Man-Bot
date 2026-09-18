@@ -35,44 +35,60 @@ def check_site(cinema, url):
     with sync_playwright() as p:
 
         browser = p.chromium.launch(
-    headless=True,
-    args=[
-        "--disable-blink-features=AutomationControlled",
-        "--disable-http2"
-    ]
-)
-
-page = browser.new_page(
-    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
-)
-
-try:
-    page.goto(
-        url,
-        wait_until="domcontentloaded",
-        timeout=60000
-    )
-
-except Exception as e:
-    print("Could not open", cinema, e)
-    browser.close()
-    return
-    url,
-    wait_until="domcontentloaded",
-    timeout=60000
+            headless=True,
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--disable-http2"
+            ]
         )
+
+        page = browser.new_page(
+            user_agent=
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 Chrome/120 Safari/537.36"
+        )
+
+
+        try:
+
+            page.goto(
+                url,
+                wait_until="domcontentloaded",
+                timeout=60000
+            )
+
+
+        except Exception as e:
+
+            print(
+                "Could not open",
+                cinema,
+                e
+            )
+
+            browser.close()
+            return
+
 
         time.sleep(5)
 
+
         content = page.content().lower()
+
 
         found = []
 
+
         for movie in movies_to_watch:
+
             if movie.lower() in content:
+
                 found.append(movie)
 
+
+
         browser.close()
+
 
 
         if found:
@@ -84,10 +100,12 @@ except Exception as e:
                 "\n".join(found)
                 +
                 "\n\n"
-                + url
+                +
+                url
             )
 
             send_message(message)
+
 
 
 check_site(
