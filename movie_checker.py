@@ -47,6 +47,8 @@ def check_website(name, url):
 
         send_message(message)
 
+send_message("🤖 Movie-Man Bot test message is working!")
+
 
 check_website(
     "Scene District 5",
