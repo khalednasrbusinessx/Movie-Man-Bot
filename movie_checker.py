@@ -1,17 +1,22 @@
+from playwright.sync_api import sync_playwright
 import requests
-from bs4 import BeautifulSoup
 import os
+import time
+
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
+
 movies_to_watch = [
     "Dune",
-    "Doomsday"
+    "Doomsday",
+    "Avengers"
 ]
 
 
 def send_message(text):
+
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
     requests.post(
@@ -23,40 +28,59 @@ def send_message(text):
     )
 
 
-def check_website(name, url):
+def check_site(cinema, url):
 
-    response = requests.get(url)
+    print("Checking:", cinema)
 
-    text = response.text.lower()
+    with sync_playwright() as p:
 
-    found = []
-
-    for movie in movies_to_watch:
-        if movie.lower() in text:
-            found.append(movie)
-
-    if found:
-        message = (
-            f"🎬 Movie Alert!\n\n"
-            f"Cinema: {name}\n\n"
-            +
-            "\n".join(found)
-            +
-            f"\n\n{url}"
+        browser = p.chromium.launch(
+            headless=True
         )
 
-        send_message(message)
+        page = browser.new_page()
 
-send_message("🤖 Movie-Man Bot test message is working!")
+        page.goto(
+            url,
+            wait_until="networkidle",
+            timeout=60000
+        )
+
+        time.sleep(5)
+
+        content = page.content().lower()
+
+        found = []
+
+        for movie in movies_to_watch:
+            if movie.lower() in content:
+                found.append(movie)
+
+        browser.close()
 
 
-check_website(
-    "Scene District 5",
-    "https://district5.scenecinemas.com/home"
+        if found:
+
+            message = (
+                "🎬 Movie Alert!\n\n"
+                f"Cinema: {cinema}\n\n"
+                +
+                "\n".join(found)
+                +
+                "\n\n"
+                + url
+            )
+
+            send_message(message)
+
+
+check_site(
+    "VOX Egypt",
+    "https://egy.voxcinemas.com/movies/whatson"
 )
 
 
-check_website(
-    "VOX Egypt",
-    "https://egy.voxcinemas.com/movies/whatson"
+check_site(
+    "Scene District 5",
+    "https://district5.scenecinemas.com/home"
 )
