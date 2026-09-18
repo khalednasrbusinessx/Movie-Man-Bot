@@ -35,15 +35,21 @@ def check_site(cinema, url):
     with sync_playwright() as p:
 
         browser = p.chromium.launch(
-            headless=True
-        )
+    headless=True,
+    args=[
+        "--disable-blink-features=AutomationControlled",
+        "--disable-http2"
+    ]
+)
 
-        page = browser.new_page()
+page = browser.new_page(
+    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
+)
 
-        page.goto(
-            url,
-            wait_until="networkidle",
-            timeout=60000
+page.goto(
+    url,
+    wait_until="domcontentloaded",
+    timeout=60000
         )
 
         time.sleep(5)
