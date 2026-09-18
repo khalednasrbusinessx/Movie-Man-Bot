@@ -4,6 +4,10 @@ import os
 import time
 
 
+# ==========================
+# SETTINGS
+# ==========================
+
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
@@ -14,6 +18,10 @@ movies_to_watch = [
     "Avengers"
 ]
 
+
+# ==========================
+# TELEGRAM
+# ==========================
 
 def send_message(text):
 
@@ -28,28 +36,97 @@ def send_message(text):
     )
 
 
-def check_site(cinema, url):
+# ==========================
+# VOX CHECKER
+# ==========================
 
-    print("Checking:", cinema)
+def check_vox():
 
-    with sync_playwright() as p:
+    print("Checking VOX Egypt")
 
-        browser = p.chromium.launch(
-            headless=True,
-            args=[
-                "--disable-blink-features=AutomationControlled",
-                "--disable-http2"
-            ]
+    url = (
+        "https://egy.voxcinemas.com/"
+        "api/tracking/ga4/view_item_list"
+        "?identifier=ns&zone=3"
+    )
+
+
+    try:
+
+        response = requests.get(
+            url,
+            timeout=30
         )
 
-        page = browser.new_page(
-            user_agent=
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 Chrome/120 Safari/537.36"
+
+        data = response.text.lower()
+
+
+        found = []
+
+
+        for movie in movies_to_watch:
+
+            if movie.lower() in data:
+
+                found.append(movie)
+
+
+
+        if found:
+
+            message = (
+                "🎬 Movie Alert!\n\n"
+                "Cinema: VOX Egypt\n\n"
+                +
+                "\n".join(found)
+                +
+                "\n\n"
+                "https://egy.voxcinemas.com/movies/whatson"
+            )
+
+            send_message(message)
+
+
+
+    except Exception as e:
+
+        print(
+            "VOX error:",
+            e
         )
 
 
-        try:
+
+# ==========================
+# DISTRICT 5 CHECKER
+# ==========================
+
+def check_scene():
+
+    print("Checking Scene District 5")
+
+
+    url = (
+        "https://district5.scenecinemas.com/home"
+    )
+
+
+    try:
+
+        with sync_playwright() as p:
+
+
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    "--disable-blink-features=AutomationControlled"
+                ]
+            )
+
+
+            page = browser.new_page()
+
 
             page.goto(
                 url,
@@ -58,65 +135,59 @@ def check_site(cinema, url):
             )
 
 
-        except Exception as e:
+            time.sleep(5)
 
-            print(
-                "Could not open",
-                cinema,
-                e
-            )
+
+            content = page.content().lower()
+
+
+            found = []
+
+
+            for movie in movies_to_watch:
+
+                if movie.lower() in content:
+
+                    found.append(movie)
+
+
 
             browser.close()
-            return
-
-
-        time.sleep(5)
-
-
-        content = page.content().lower()
-
-        print(content[:2000])
-
-
-        found = []
-
-
-        for movie in movies_to_watch:
-
-            if movie.lower() in content:
-
-                found.append(movie)
 
 
 
-        browser.close()
+            if found:
+
+
+                message = (
+                    "🎬 Movie Alert!\n\n"
+                    "Cinema: Scene District 5\n\n"
+                    +
+                    "\n".join(found)
+                    +
+                    "\n\n"
+                    + url
+                )
+
+
+                send_message(message)
 
 
 
-        if found:
+    except Exception as e:
 
-            message = (
-                "🎬 Movie Alert!\n\n"
-                f"Cinema: {cinema}\n\n"
-                +
-                "\n".join(found)
-                +
-                "\n\n"
-                +
-                url
-            )
 
-            send_message(message)
+        print(
+            "Scene error:",
+            e
+        )
 
 
 
-check_site(
-    "VOX Egypt",
-    "https://egy.voxcinemas.com/movies/whatson"
-)
+# ==========================
+# RUN CHECK
+# ==========================
 
+check_vox()
 
-check_site(
-    "Scene District 5",
-    "https://district5.scenecinemas.com/home"
-)
+check_scene()
