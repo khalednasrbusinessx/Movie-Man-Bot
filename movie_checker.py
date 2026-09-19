@@ -84,13 +84,16 @@ def send_message(text):
         f"bot{BOT_TOKEN}/sendMessage"
     )
 
-    requests.post(
+    response = requests.post(
         url,
         json={
             "chat_id": CHAT_ID,
             "text": text
-        }
+        },
+        timeout=30
     )
+
+    response.raise_for_status()
 
 
 
@@ -405,5 +408,7 @@ check_vox()
 
 check_scene()
 
+
+send_message("✅ Movie checker completed its scheduled run.")
 
 print("Finished")
