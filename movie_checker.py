@@ -35,6 +35,7 @@ def save_watchlist(movies):
         )
 
 
+
 # ==========================
 # TEXT CLEANING
 # ==========================
@@ -84,14 +85,14 @@ def send_message(text):
 
 
 # ==========================
-# TELEGRAM COMMANDS
+# TELEGRAM OFFSET
 # ==========================
 
 def get_offset():
 
     try:
 
-        with open(OFFSET_FILE,"r") as file:
+        with open(OFFSET_FILE, "r") as file:
             return int(file.read())
 
     except:
@@ -102,12 +103,16 @@ def get_offset():
 
 def save_offset(offset):
 
-    with open(OFFSET_FILE,"w") as file:
+    with open(OFFSET_FILE, "w") as file:
         file.write(
             str(offset)
         )
 
 
+
+# ==========================
+# TELEGRAM COMMANDS
+# ==========================
 
 def check_commands():
 
@@ -117,7 +122,7 @@ def check_commands():
     url = (
         f"https://api.telegram.org/"
         f"bot{BOT_TOKEN}/getUpdates"
-        f"?offset={offset+1}"
+        f"?offset={offset + 1}"
     )
 
 
@@ -127,7 +132,20 @@ def check_commands():
     movies = load_watchlist()
 
 
-    for update in data["result"]:
+    highest_update_id = offset
+
+
+
+    for update in data.get("result", []):
+
+
+        update_id = update["update_id"]
+
+
+        if update_id > highest_update_id:
+
+            highest_update_id = update_id
+
 
 
         message = update.get(
@@ -142,19 +160,26 @@ def check_commands():
         )
 
 
+
         if text.startswith("/add"):
+
 
             movie = text.replace(
                 "/add",
-                ""
+                "",
+                1
             ).strip()
+
 
 
             if movie:
 
+
                 if movie not in movies:
 
+
                     movies.append(movie)
+
 
                     save_watchlist(
                         movies
@@ -162,39 +187,48 @@ def check_commands():
 
 
                     send_message(
-                        "✅ Added:\n"
-                        + movie
+                        "✅ Added:\n" + movie
                     )
 
 
 
         elif text.startswith("/stop"):
 
+
             movie = text.replace(
                 "/stop",
-                ""
+                "",
+                1
             ).strip()
 
 
-            movies = [
+
+            new_movies = [
                 m for m in movies
                 if m.lower() != movie.lower()
             ]
 
 
-            save_watchlist(
-                movies
-            )
+
+            if len(new_movies) != len(movies):
 
 
-            send_message(
-                "🛑 Removed:\n"
-                + movie
-            )
+                movies = new_movies
+
+
+                save_watchlist(
+                    movies
+                )
+
+
+                send_message(
+                    "🛑 Removed:\n" + movie
+                )
 
 
 
         elif text.startswith("/list"):
+
 
             send_message(
                 "🎬 Watchlist:\n\n"
@@ -206,18 +240,20 @@ def check_commands():
 
         elif text.startswith("/help"):
 
+
             send_message(
                 "Commands:\n\n"
                 "/add Movie Name\n"
                 "/stop Movie Name\n"
-                "/list"
+                "/list\n"
+                "/help"
             )
 
 
 
-        save_offset(
-            update["update_id"]
-        )
+    save_offset(
+        highest_update_id
+    )
 
 
 
@@ -241,13 +277,20 @@ def check_vox():
     )
 
 
-    text = requests.get(url).text
+    response = requests.get(
+        url,
+        timeout=30
+    )
+
+
+    text = response.text
 
 
     found = []
 
 
     for movie in movies:
+
 
         if movie_found(
             movie,
@@ -259,6 +302,7 @@ def check_vox():
 
 
     if found:
+
 
         send_message(
             "🎬 VOX Egypt\n\n"
@@ -283,6 +327,7 @@ def check_scene():
     url = (
         "https://district5.scenecinemas.com/home"
     )
+
 
 
     with sync_playwright() as p:
@@ -312,10 +357,12 @@ def check_scene():
 
 
 
-    found=[]
+    found = []
+
 
 
     for movie in movies:
+
 
         if movie_found(
             movie,
@@ -327,6 +374,7 @@ def check_scene():
 
 
     if found:
+
 
         send_message(
             "🎬 Scene District 5\n\n"
@@ -340,8 +388,16 @@ def check_scene():
 # START
 # ==========================
 
+print("Checking Telegram commands")
+
 check_commands()
+
+
+print("Checking cinemas")
 
 check_vox()
 
 check_scene()
+
+
+print("Finished")
