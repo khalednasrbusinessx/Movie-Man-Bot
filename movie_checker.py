@@ -35,6 +35,16 @@ def save_watchlist(movies):
         )
 
 
+def send_watchlist(movies):
+
+    if movies:
+        send_message(
+            "🎬 Watchlist:\n\n" + "\n".join(movies)
+        )
+    else:
+        send_message("🎬 Watchlist is empty")
+
+
 
 # ==========================
 # TEXT CLEANING
@@ -186,9 +196,7 @@ def check_commands():
                     )
 
 
-                    send_message(
-                        "✅ Added:\n" + movie
-                    )
+                    send_watchlist(movies)
 
 
 
@@ -221,9 +229,7 @@ def check_commands():
                 )
 
 
-                send_message(
-                    "🛑 Removed:\n" + movie
-                )
+                send_watchlist(movies)
 
 
 
