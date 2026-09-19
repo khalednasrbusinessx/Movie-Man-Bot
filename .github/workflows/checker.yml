@@ -1,5 +1,9 @@
 name: Movie Checker
 
+permissions:
+  contents: write
+
+
 
 on:
 
